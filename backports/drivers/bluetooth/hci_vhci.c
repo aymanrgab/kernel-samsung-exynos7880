@@ -50,7 +50,6 @@ struct vhci_data {
 	wait_queue_head_t read_wait;
 	struct sk_buff_head readq;
 
-	struct mutex open_mutex;
 	struct delayed_work open_timeout;
 };
 
@@ -96,14 +95,11 @@ static int vhci_send_frame(struct hci_dev *hdev, struct sk_buff *skb)
 	return 0;
 }
 
-static int __vhci_create_device(struct vhci_data *data, __u8 opcode)
+static int vhci_create_device(struct vhci_data *data, __u8 opcode)
 {
 	struct hci_dev *hdev;
 	struct sk_buff *skb;
 	__u8 dev_type;
-
-	if (data->hdev)
-		return -EBADFD;
 
 	/* bits 0-1 are dev_type (BR/EDR or AMP) */
 	dev_type = opcode & 0x03;
@@ -163,17 +159,7 @@ static int __vhci_create_device(struct vhci_data *data, __u8 opcode)
 	return 0;
 }
 
-static int vhci_create_device(struct vhci_data *data, __u8 opcode)
-{
-	int err;
-
-	mutex_lock(&data->open_mutex);
-	err = __vhci_create_device(data, opcode);
-	mutex_unlock(&data->open_mutex);
-
-	return err;
-}
-
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
 static inline ssize_t vhci_get_user(struct vhci_data *data,
 				    struct iov_iter *from)
 {
@@ -181,6 +167,17 @@ static inline ssize_t vhci_get_user(struct vhci_data *data,
 	struct sk_buff *skb;
 	__u8 pkt_type, opcode;
 	int ret;
+#else
+static inline ssize_t vhci_get_user(struct vhci_data *data,
+				    const struct iovec *iov,
+				    unsigned long count)
+{
+	size_t len = iov_length(iov, count);
+	struct sk_buff *skb;
+	__u8 pkt_type, opcode;
+	unsigned long i;
+	int ret;
+#endif
 
 	if (len < 2 || len > HCI_MAX_FRAME_SIZE)
 		return -EINVAL;
@@ -189,10 +186,20 @@ static inline ssize_t vhci_get_user(struct vhci_data *data,
 	if (!skb)
 		return -ENOMEM;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
 	if (copy_from_iter(skb_put(skb, len), len, from) != len) {
 		kfree_skb(skb);
 		return -EFAULT;
 	}
+#else
+	for (i = 0; i < count; i++) {
+		if (copy_from_user(skb_put(skb, iov[i].iov_len),
+				   iov[i].iov_base, iov[i].iov_len)) {
+			kfree_skb(skb);
+			return -EFAULT;
+		}
+	}
+#endif
 
 	pkt_type = *((__u8 *) skb->data);
 	skb_pull(skb, 1);
@@ -212,6 +219,11 @@ static inline ssize_t vhci_get_user(struct vhci_data *data,
 		break;
 
 	case HCI_VENDOR_PKT:
+		if (data->hdev) {
+			kfree_skb(skb);
+			return -EBADFD;
+		}
+
 		cancel_delayed_work_sync(&data->open_timeout);
 
 		opcode = *((__u8 *) skb->data);
@@ -299,12 +311,21 @@ static ssize_t vhci_read(struct file *file,
 	return ret;
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
 static ssize_t vhci_write(struct kiocb *iocb, struct iov_iter *from)
+#else
+static ssize_t vhci_write(struct kiocb *iocb, const struct iovec *iov,
+			  unsigned long count, loff_t pos)
+#endif
 {
 	struct file *file = iocb->ki_filp;
 	struct vhci_data *data = file->private_data;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
 	return vhci_get_user(data, from);
+#else
+	return vhci_get_user(data, iov, count);
+#endif
 }
 
 static unsigned int vhci_poll(struct file *file, poll_table *wait)
@@ -338,7 +359,6 @@ static int vhci_open(struct inode *inode, struct file *file)
 	skb_queue_head_init(&data->readq);
 	init_waitqueue_head(&data->read_wait);
 
-	mutex_init(&data->open_mutex);
 	INIT_DELAYED_WORK(&data->open_timeout, vhci_open_timeout);
 
 	file->private_data = data;
@@ -352,18 +372,15 @@ static int vhci_open(struct inode *inode, struct file *file)
 static int vhci_release(struct inode *inode, struct file *file)
 {
 	struct vhci_data *data = file->private_data;
-	struct hci_dev *hdev;
+	struct hci_dev *hdev = data->hdev;
 
 	cancel_delayed_work_sync(&data->open_timeout);
-
-	hdev = data->hdev;
 
 	if (hdev) {
 		hci_unregister_dev(hdev);
 		hci_free_dev(hdev);
 	}
 
-	skb_queue_purge(&data->readq);
 	file->private_data = NULL;
 	kfree(data);
 
@@ -373,14 +390,18 @@ static int vhci_release(struct inode *inode, struct file *file)
 static const struct file_operations vhci_fops = {
 	.owner		= THIS_MODULE,
 	.read		= vhci_read,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
 	.write_iter	= vhci_write,
+#else
+	.aio_write	= vhci_write,
+#endif
 	.poll		= vhci_poll,
 	.open		= vhci_open,
 	.release	= vhci_release,
 	.llseek		= no_llseek,
 };
 
-static struct miscdevice vhci_miscdev= {
+static struct miscdevice vhci_miscdev = {
 	.name	= "vhci",
 	.fops	= &vhci_fops,
 	.minor	= VHCI_MINOR,
