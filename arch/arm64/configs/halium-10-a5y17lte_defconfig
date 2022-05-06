@@ -4793,4 +4793,7 @@ CONFIG_SIGNATURE=y
 CONFIG_LIBFDT=y
 CONFIG_OID_REGISTRY=y
 CONFIG_ARCH_HAS_SG_CHAIN=y
+<<<<<<< HEAD:arch/arm64/configs/halium-10-a5y17lte_defconfig
 
+=======
+>>>>>>> d6662fd799e72bc5ed58f29bf03e3a7f5ac9fda4:arch/arm64/configs/lineage-a5y17lte_defconfig
