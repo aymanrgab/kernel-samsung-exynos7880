@@ -448,13 +448,13 @@ static int bt_power_populate_dt_pinfo(struct platform_device *pdev)
 		gpio_direction_output(bt_power_pdata->bt_gpio_bt_wake, 0);
 		gpio_direction_output(bt_power_pdata->bt_gpio_sys_rst, 0);
 
-#ifdef GPIO_3_3V_DCDC_EN
+/*#ifdef GPIO_3_3V_DCDC_EN
 		rc = bt_dt_parse_vreg_info(&pdev->dev,
 					&bt_power_pdata->wlan_dcdc_en,
 					"vdd-wlan");
 		if (rc < 0)
 			return rc;		
-#endif //GPIO_3_3V_DCDC_EN
+#endif //GPIO_3_3V_DCDC_EN*/
 
 	}
 
