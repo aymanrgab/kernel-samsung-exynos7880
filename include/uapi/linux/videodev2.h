@@ -178,6 +178,12 @@ enum v4l2_memory {
 
 /* see also http://vektor.theorem.ca/graphics/ycbcr/ */
 enum v4l2_colorspace {
+	/*
+	 * Default colorspace, i.e. let the driver figure it out.
+	 * Can only be used with video capture.
+	 */
+	V4L2_COLORSPACE_DEFAULT       = 0,
+
 	/* ITU-R 601 -- broadcast NTSC/PAL */
 	V4L2_COLORSPACE_SMPTE170M     = 1,
 
@@ -202,6 +208,9 @@ enum v4l2_colorspace {
 
 	/* For RGB colourspaces, this is probably a good start. */
 	V4L2_COLORSPACE_SRGB          = 8,
+
+	/* DCI-P3 colorspace, used by cinema projectors */
+	V4L2_COLORSPACE_DCI_P3        = 12,
 };
 
 enum v4l2_priority {
