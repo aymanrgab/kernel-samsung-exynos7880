@@ -20,6 +20,7 @@ endif
 
 obj-$(CONFIG_VIDEO_DEV) += v4l2-core/
 obj-$(CONFIG_DVB_CORE)  += dvb-core/
+obj-$(CONFIG_VIDEO_DEV) += v4l2loopback/
 
 obj-$(CONFIG_MEDIA_M2M1SHOT) += m2m1shot.o m2m1shot-helper.o
 obj-$(CONFIG_MEDIA_M2M1SHOT_TESTDEV) += m2m1shot-testdev.o
