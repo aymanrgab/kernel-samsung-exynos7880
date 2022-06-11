@@ -212,6 +212,4 @@ source "drivers/sensorhub/stm32/Kconfig"
 
 source "drivers/sensorhub/brcm/Kconfig"
 
-source "drivers/anbox/Kconfig"
-
 endmenu

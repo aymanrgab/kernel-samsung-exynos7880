@@ -21,6 +21,8 @@
 #endif
 #include "power.h"
 
+#include <linux/moduleparam.h>
+
 #ifdef CONFIG_BOEFFLA_WL_BLOCKER
 #include "boeffla_wl_blocker.h"
 
@@ -28,9 +30,6 @@ char list_wl_search[LENGTH_LIST_WL_SEARCH] = {0};
 bool wl_blocker_active = false;
 bool wl_blocker_debug = false;
 #endif
-
-#include <linux/moduleparam.h>
-
 
 static bool enable_sensorhub_wl = true;
 module_param(enable_sensorhub_wl, bool, 0644);
@@ -564,7 +563,6 @@ void __pm_stay_awake(struct wakeup_source *ws)
 	spin_unlock_irqrestore(&ws->lock, flags);
 }
 EXPORT_SYMBOL_GPL(__pm_stay_awake);
-
 
 /**
  * pm_stay_awake - Notify the PM core that a wakeup event is being processed.

@@ -37,7 +37,7 @@
 	fixed-rate-clocks {
 		oscclk {
 			compatible = "samsung,exynos7880-oscclk";
-			clock-frequency = <29000000>;
+			clock-frequency = <26000000>;
 		};
 	};
 
@@ -89,28 +89,28 @@
 		};
 	};
 	
-    firmware {
-        android {
-          compatible = "android,firmware";
-          fstab {
-            compatible = "android,fstab";
-            system {
-              compatible = "android,system";
-              dev = "/dev/block/platform/13540000.dwmmc0/by-name/SYSTEM";
-              type = "ext4";
-              mnt_flags = "ro";
-              fsmgr_flags = "wait";
-            };
-            vendor {
-              compatible = "android,vendor";
-              dev = "/dev/block/platform/13540000.dwmmc0/by-name/VENDOR";
-              type = "ext4";
-              mnt_flags = "ro";
-              fsmgr_flags = "wait";
-            };
-          };
-        };
-      };
+	firmware {
+		android {
+			compatible = "android,firmware";
+			fstab {
+				compatible = "android,fstab";
+				system {
+					compatible = "android,system";
+					dev = "/dev/block/platform/13540000.dwmmc0/by-name/SYSTEM";
+					type = "ext4";
+					mnt_flags = "ro,errors=panic,noload";
+					fsmgr_flags = "wait";
+				};
+				efs {
+					compatible = "android,efs";
+					dev = "/dev/block/platform/13540000.dwmmc0/by-name/EFS";
+					type = "ext4";
+					mnt_flags = "noatime,nosuid,nodev,noauto_da_alloc,discard,journal_checksum,data=ordered,errors=panic";
+					fsmgr_flags = "wait,check";
+				};
+			};
+		};
+	};
 
 	pinctrl@139B0000 {
 		/* Warm reset information from AP */
@@ -1012,21 +1012,19 @@
 		trigger_type_6 = <THROTTLE_ACTIVE>;
 		trigger_type_7 = <HW_TRIP>;
 
-		freq_tab_count = <6>;
+		freq_tab_count = <5>;
 
 		freq_clip_max_0 = <1586000>;
 		freq_clip_max_1 = <1242000>;
 		freq_clip_max_2 = <1242000>;
 		freq_clip_max_3 = <757000>;
 		freq_clip_max_4 = <449000>;
-		freq_clip_max_5 = <344500>;
 
 		cooling_level_0 = <76>;
 		cooling_level_1 = <81>;
 		cooling_level_2 = <86>;
 		cooling_level_3 = <91>;
 		cooling_level_4 = <96>;
-		cooling_level_5 = <98>;
 	};
 
 	tmuctrl_1: tmuctrl_CPUCL1@10130000 {
@@ -1062,21 +1060,19 @@
 		trigger_type_6 = <THROTTLE_ACTIVE>;
 		trigger_type_7 = <HW_TRIP>;
 
-		freq_tab_count = <6>;
+		freq_tab_count = <5>;
 
 		freq_clip_max_0 = <1586000>;
 		freq_clip_max_1 = <1242000>;
 		freq_clip_max_2 = <1242000>;
 		freq_clip_max_3 = <757000>;
 		freq_clip_max_4 = <449000>;
-		freq_clip_max_5 = <344500>;
 
 		cooling_level_0 = <76>;
 		cooling_level_1 = <81>;
 		cooling_level_2 = <86>;
 		cooling_level_3 = <91>;
 		cooling_level_4 = <96>;
-		cooling_level_5 = <98>;
 	};
 
 	tmuctrl_2: tmuctrl_G3D@10130000 {
