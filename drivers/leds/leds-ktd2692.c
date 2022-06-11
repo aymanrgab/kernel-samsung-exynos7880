@@ -430,7 +430,7 @@ static int ktd2692_probe(struct platform_device *pdev)
 
 	global_ktd2692data->is_torch_enable = false;
 
-	ktd2692_dev = device_create(camera_class, NULL, 0, NULL, "flash");
+	/*ktd2692_dev = device_create(camera_class, NULL, 0, NULL, "flash");*/
 	if (IS_ERR(ktd2692_dev)) {
 		LED_ERROR("Failed to create device(flash)!\n");
 	}
@@ -451,8 +451,8 @@ static int __devexit ktd2692_remove(struct platform_device *pdev)
 {
 	device_remove_file(ktd2692_dev, &dev_attr_rear_flash);
 	device_remove_file(ktd2692_dev, &dev_attr_rear_torch_flash);
-	device_destroy(camera_class, 0);
-	class_destroy(camera_class);
+	/*device_destroy(camera_class, 0);
+	class_destroy(camera_class);*/
 
 	return 0;
 }
